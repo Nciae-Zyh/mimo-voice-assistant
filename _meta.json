@@ -1,6 +1,6 @@
 {
   "name": "mimo-voice-assistant",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "MiMo Voice Assistant — 端到端语音解决方案。集成 Xiaomi MiMo-V2-TTS (情绪感知) 和 MiMo-V2-Omni (语音识别)，支持 Telegram/Discord/WhatsApp/iMessage/Slack 多平台。",
   "author": "nciae-zyh",
   "license": "MIT",
