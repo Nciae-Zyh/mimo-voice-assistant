@@ -1,6 +1,6 @@
 ---
 name: mimo-voice-assistant
-version: 1.0.3
+version: 1.0.4
 description: >
   End-to-end voice solution for OpenClaw agents.
   Xiaomi MiMo-V2-TTS with emotion-aware speech generation,
