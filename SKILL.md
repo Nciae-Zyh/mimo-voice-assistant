@@ -1,6 +1,6 @@
 ---
 name: mimo-voice-assistant
-version: 1.0.6
+version: 1.0.7
 description: >
   End-to-end voice solution for OpenClaw agents.
   Xiaomi MiMo-V2-TTS with emotion-aware speech generation,
@@ -28,7 +28,7 @@ TTS (text-to-speech), STT (speech-to-text), and emotion-aware voice generation f
 User voice → OpenClaw (Telegram/Discord/WhatsApp/...)
            → STT (MiMo-V2-Omni transcription)
            → Agent processes
-           → TTS (MiMo-V2-TTS with emotion)
+           → TTS (MiMo-V2-TTS with emotion + language)
            → Voice reply
 ```
 
@@ -82,17 +82,56 @@ See `references/platforms.md`
 
 **Formats:** `wav` (default), `mp3` (needs ffmpeg), `opus` (needs ffmpeg)
 
-## Language Adaptation
+## Multi-Language Support
 
-**Default behavior:** Reply in the same language the user uses. No explicit instruction needed.
+**CRITICAL: TTS output must match the user's language automatically.**
 
-| User says | Agent replies in |
-|-----------|-----------------|
-| "你好" | Chinese |
-| "Hello" | English |
-| "こんにちは" | Japanese |
+### Language Detection
 
-This applies to both text replies and TTS voice output. If the user explicitly requests a different language, follow their instruction.
+Detect the user's language from their message and respond in the **same language** for both text and voice.
+
+| User sends | Agent text reply | TTS voice output |
+|-----------|-----------------|------------------|
+| "你好，帮我查一下天气" | 中文回复 | 中文语音 |
+| "What's the weather?" | English reply | English voice |
+| "おはようございます" | 日本語返答 | 日本語音声 |
+| "Bonjour, comment ça va ?" | Réponse en français | Voix française |
+| "안녕하세요" | 한국어 답변 | 한국어 음성 |
+
+### How It Works
+
+1. **Agent detects language** from the user's message (first message or latest message language)
+2. **Agent replies in that language** (text)
+3. **TTS speaks that language** — MiMo-V2-TTS supports Chinese, English, Japanese, Korean, and more
+4. **No explicit instruction needed** — this is automatic behavior
+
+### When to Override
+
+Only switch language if the user explicitly asks:
+- "请用英语回答" → Switch to English
+- "Speak in Japanese" → Switch to Japanese
+- Otherwise, always match the user's language
+
+### TTS Language Compatibility
+
+MiMo-V2-TTS supports natural speech in:
+- ✅ Chinese (Mandarin)
+- ✅ English (US/UK)
+- ✅ Japanese
+- ✅ Korean
+- ✅ Other languages (quality varies)
+
+### Implementation
+
+In your response, you can use `[lang:xx]` hints for the TTS proxy (optional):
+
+```
+[lang:zh]你好，这是你的语音回复。
+[lang:en]Hello, here is your voice reply.
+[lang:ja]こんにちは、音声返信です。
+```
+
+Or simply reply normally — the TTS proxy will automatically handle the language based on the text content.
 
 ## Security
 

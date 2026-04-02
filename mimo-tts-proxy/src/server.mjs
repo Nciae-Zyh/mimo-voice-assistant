@@ -57,11 +57,13 @@ async function convertAudio(inputPath, outputFormat) {
 }
 
 // ── 调用小米 MiMo-V2-TTS API ─────────────────────────────────
-async function callMiMoTTS(text, voice, apiKey) {
+async function callMiMoTTS(text, voice, apiKey, lang) {
   const url = `${MIMO_API_BASE}/v1/chat/completions`;
+  // 语言前缀提示，帮助 MiMo TTS 选择正确的语音
+  const langPrefix = lang ? `[lang:${lang}] ` : "";
   const body = {
     model: "mimo-v2-tts",
-    messages: [{ role: "assistant", content: text }],
+    messages: [{ role: "assistant", content: langPrefix + text }],
     audio: { format: "wav", voice: voice || DEFAULT_VOICE },
   };
   const resp = await fetch(url, {
@@ -133,6 +135,7 @@ async function handleRequest(req, res) {
       const text = body.input || body.text;
       const voice = body.voice || DEFAULT_VOICE;
       const responseFormat = body.response_format || "mp3";
+      const lang = body.lang || undefined; // 语言提示：zh/en/ja/ko 等
 
       if (!text) {
         res.writeHead(400, { "Content-Type": "application/json" });
@@ -150,7 +153,7 @@ async function handleRequest(req, res) {
         return;
       }
 
-      const wavBuffer = await callMiMoTTS(text, voice, apiKey);
+      const wavBuffer = await callMiMoTTS(text, voice, apiKey, lang);
       const tmpDir = mkdtempSync("/tmp/mimo-tts-");
       const wavPath = join(tmpDir, "audio.wav");
       writeFileSync(wavPath, wavBuffer);
