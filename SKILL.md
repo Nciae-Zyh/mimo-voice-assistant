@@ -1,6 +1,6 @@
 ---
 name: mimo-voice-assistant
-version: 1.0.7
+version: 1.0.8
 description: >
   End-to-end voice solution for OpenClaw agents.
   Xiaomi MiMo-V2-TTS with emotion-aware speech generation,
@@ -31,6 +31,10 @@ User voice → OpenClaw (Telegram/Discord/WhatsApp/...)
            → TTS (MiMo-V2-TTS with emotion + language)
            → Voice reply
 ```
+
+## Before Install
+
+> ⚠️ This skill sends text/audio to Xiaomi's MiMo API (`api.xiaomimimo.com`) for TTS/STT processing. Ensure you trust this service and have a valid `MIMO_API_KEY`. If you need higher security, consider deploying the proxy in an isolated environment (Docker/container) and rotating your API key regularly.
 
 ## Quick Start
 
@@ -133,9 +137,10 @@ In your response, you can use `[lang:xx]` hints for the TTS proxy (optional):
 
 Or simply reply normally — the TTS proxy will automatically handle the language based on the text content.
 
-## Security
+## Security & Data Flow
 
-- API key via env var only, never hardcoded
-- Proxy binds to `127.0.0.1` (localhost only)
-- Temp audio files auto-cleaned
-- No third-party data transmission
+- **API key**: passed via env var (`MIMO_API_KEY`) or `Authorization` Bearer header, never hardcoded
+- **Network**: proxy only connects to `api.xiaomimimo.com` (Xiaomi official API) — text and base64 audio are sent there for TTS/STT processing
+- **Local binding**: proxy binds to `127.0.0.1:3999` (localhost only, not externally exposed)
+- **Temp files**: auto-cleaned after each request
+- **User responsibility**: if using systemd/launchd for persistence, store API keys securely (env file or secret manager, not inline in service files)
