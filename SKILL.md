@@ -67,12 +67,19 @@ OpenClaw config (`openclaw.json`):
     "tts": {
       "auto": "inbound",
       "provider": "openai",
-      "baseUrl": "http://127.0.0.1:3999",
+      "providers": {
+        "openai": {
+          "baseUrl": "http://127.0.0.1:3999",
+          "apiKey": "your-mimo-api-key"
+        }
+      },
       "maxTextLength": 4000
     }
   }
 }
 ```
+
+> **Note:** QQ Bot plugin uses a different config structure — see `references/platforms.md` for QQ Bot specific configuration.
 
 ## Token Plan
 

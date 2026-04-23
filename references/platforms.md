@@ -26,7 +26,7 @@ OpenClaw 支持多种消息平台，每个平台的语音消息格式和发送�
 
 ## OpenClaw TTS 配置
 
-### 全局配置（所有平台）
+### 全局配置（框架级 TTS，适用于 Telegram/Discord/WhatsApp 等）
 
 ```jsonc
 // openclaw.json
@@ -35,12 +35,19 @@ OpenClaw 支持多种消息平台，每个平台的语音消息格式和发送�
     "tts": {
       "auto": "inbound",      // 收到语音时自动回复语音
       "provider": "openai",   // 使用 OpenAI 兼容 API
-      "baseUrl": "http://127.0.0.1:3999",  // MiMo TTS Proxy
+      "providers": {
+        "openai": {
+          "baseUrl": "http://127.0.0.1:3999",  // MiMo TTS Proxy
+          "apiKey": "your-mimo-api-key"
+        }
+      },
       "maxTextLength": 4000   // 最大文本长度
     }
   }
 }
 ```
+
+> **QQ Bot 注意:** QQ Bot 插件使用不同的 TTS 配置结构，见下方 [QQ Bot 配置](#qq-bot) 小节。
 
 ### TTS 自动模式
 
@@ -99,7 +106,12 @@ Telegram 原生支持语音消息（Voice Messages）。
     "tts": {
       "auto": "inbound",
       "provider": "openai",
-      "baseUrl": "http://127.0.0.1:3999"
+      "providers": {
+        "openai": {
+          "baseUrl": "http://127.0.0.1:3999",
+          "apiKey": "your-mimo-api-key"
+        }
+      }
     }
   }
 }
@@ -167,6 +179,80 @@ Slack 通过 Files API 上传音频文件。
     }
   }
 }
+```
+
+### QQ Bot
+
+> QQ Bot 插件的 TTS 配置解析逻辑与框架级不同，需要单独配置。
+
+#### TTS 配置
+
+QQ Bot 插件的 `resolveTTSConfig` 按以下优先级查找配置：
+1. `channels.qqbot.tts` — 插件级配置（优先）
+2. `messages.tts.openai` — 回退到框架级（注意：是 `messages.tts.openai`，不是 `messages.tts.providers.openai`）
+3. `provider` 字段会引用 `models.providers` 中的 key，自动继承 `baseUrl` 和 `apiKey`
+
+**推荐配置：**
+
+```jsonc
+{
+  "channels": {
+    "qqbot": {
+      "enabled": true,
+      "appId": "your-app-id",
+      "clientSecret": "your-secret",
+      "tts": {
+        "provider": "openai",
+        "model": "tts-1",
+        "voice": "mimo_default",
+        "baseUrl": "http://127.0.0.1:3999",
+        "apiKey": "tp-your-mimo-api-key",
+        "enabled": true
+      }
+    }
+  },
+  "messages": {
+    "tts": {
+      "auto": "off"
+    }
+  }
+}
+```
+
+> **关键:** `messages.tts.auto` 设为 `"off"`，让 QQ Bot 插件自己处理 TTS，避免框架级 auto-TTS 生成的文件路径与 QQ Bot 媒体目录不兼容。
+
+#### 语音文件目录限制
+
+框架级 auto-TTS 生成文件在 `/tmp/openclaw/tts-*/`，但 QQ Bot 插件要求文件在 `~/.openclaw/media/qqbot/` 目录下。如果路径不匹配会报错：
+
+```
+Voice path must be inside QQ Bot media storage
+```
+
+**解决方法：**
+- 关闭框架级 auto-TTS（`messages.tts.auto: "off"`）
+- 让 QQ Bot 插件自己通过 `<qqvoice>` 标签处理 TTS
+- 或手动调 TTS 代理生成文件到 `~/.openclaw/media/qqbot/tts/`，再用文件路径方式发送
+
+#### `<qqvoice>` 标签的两种用法
+
+| 用法 | 示例 | 行为 | 推荐 |
+|------|------|------|------|
+| 内联文本 | `<qqvoice>你好</qqvoice>` | 插件调 TTS 合成，但发送路径可能不在 QQ Bot 媒体目录 | ❌ |
+| 文件路径 | `<qqvoice file="/path/to/voice.wav" />` | 直接发送已有文件 | ✅ **推荐** |
+
+**推荐用法：** 先通过 TTS 代理生成文件到 QQ Bot 媒体目录，再用文件路径方式发送：
+
+```bash
+# 1. 生成语音文件到 QQ Bot 媒体目录
+curl -s -X POST http://127.0.0.1:3999/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer tp-your-key" \
+  -d '{"model":"tts-1","input":"要说的话","voice":"mimo_default","response_format":"wav"}' \
+  -o ~/.openclaw/media/qqbot/tts/voice-$(date +%s).wav
+
+# 2. 用 qqvoice 标签发送
+# <qqvoice file="/Users/xxx/.openclaw/media/qqbot/tts/voice-1234567890.wav" />
 ```
 
 ## 手动控制 TTS

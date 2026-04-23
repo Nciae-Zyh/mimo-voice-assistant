@@ -217,7 +217,10 @@ async function handleRequest(req, res) {
 
       let apiKey = MIMO_API_KEY;
       const authHeader = req.headers["authorization"];
-      if (authHeader?.startsWith("Bearer ")) apiKey = authHeader.slice(7);
+      if (authHeader?.startsWith("Bearer ")) {
+        const headerKey = authHeader.slice(7);
+        if (!apiKey) apiKey = headerKey;  // 环境变量优先，header 作为 fallback
+      }
 
       if (!apiKey) {
         res.writeHead(401, { "Content-Type": "application/json" });
