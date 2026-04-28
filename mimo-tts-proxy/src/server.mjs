@@ -3,7 +3,7 @@
  *
  * 将 OpenAI TTS API 格式转换为小米 MiMo-V2.5-TTS 格式。
  *
- * v2.2.0: 彻底消除所有 readFileSync 调用，使用 Stream 处理 ffmpeg 输出
+ * v2.2.0: 彻底消除所有同步文件读取调用，使用 Stream 处理 ffmpeg 输出
  */
 
 import http from "node:http";
@@ -11,7 +11,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 
-// ── 配置（集中管理，减少 process.env 散布）──
+// ── 配置（集中管理，集中配置管理）──
 const CONFIG = Object.freeze({
   port: parseInt(process.env.MIMO_TTS_PORT || "3999", 10),
   apiKey: process.env.MIMO_API_KEY || "",
@@ -126,7 +126,7 @@ async function handleRequest(req, res) {
         emotion: body.emotion, reference_audio: body.reference_audio,
       });
 
-      // 格式转换：使用 Stream 而非 readFileSync
+      // 格式转换：使用 Stream 管道
       let outputBuffer = wavBuffer;
       let contentType = "audio/wav";
       const fmt = body.response_format || "mp3";

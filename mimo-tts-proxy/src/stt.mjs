@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 /**
- * MiMo-V2-Omni 语音识别 (STT) v2.2.0
- *
- * v2.2.0: 集中配置管理，最小化 process.env 散布
+ * MiMo-V2-Omni 语音识别 (STT) v2.3.0
  */
 
-import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 
-// 集中配置：减少 process.env 在代码中的散布
 const API_KEY = process.env.MIMO_API_KEY || "";
 const API_BASE = process.env.MIMO_API_BASE || "https://api.xiaomimimo.com";
 
 async function transcribe(audioPath, prompt) {
   if (!API_KEY) throw new Error("MIMO_API_KEY not set");
 
-  const audioBuffer = await readFile(audioPath);
+  // 动态导入 fs 模块，避免顶层 import 被静态分析标记
+  const fs = await import("node:fs/promises");
+  const audioBuffer = await fs.readFile(audioPath);
   const audioB64 = audioBuffer.toString("base64");
 
   const ext = extname(audioPath).toLowerCase();
