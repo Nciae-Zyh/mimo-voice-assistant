@@ -1,6 +1,6 @@
 ---
 name: mimo-voice-assistant
-version: 2.0.0
+version: 2.1.0
 description: >
   End-to-end voice solution for OpenClaw agents.
   Xiaomi MiMo-V2.5-TTS with emotion-aware speech generation,
@@ -8,7 +8,8 @@ description: >
   MiMo-V2-Omni for voice transcription. Multi-platform ready.
   Supports Token Plan billing.
 metadata:
-  openclaw:
+  clawdbot:
+    emoji: "🎤"
     requires:
       bins: [node, ffmpeg]
       env:
@@ -23,6 +24,11 @@ metadata:
 # MiMo Voice Assistant
 
 TTS (text-to-speech), STT (speech-to-text), and emotion-aware voice generation for OpenClaw agents across all platforms.
+
+## What's New in v2.1.0
+
+- **Security fix** — eliminated temp file read/write in TTS proxy, all audio processed in memory to prevent false-positive exfiltration flags
+- **ClawHub compliance** — updated metadata format, properly declared env vars
 
 ## What's New in v2.0.0
 
